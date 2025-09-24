@@ -708,8 +708,10 @@ export default function AdminMemberManagementPage() {
                     <input
                       type="text"
                       value={newPostContractAddr}
-                      onChange={(e) => setNewPostContractAddr(e.target.value)}
-                      placeholder="输入要授权的Post合约地址（0x开头）"
+                      // 核心修改：为事件参数 e 指定类型 React.ChangeEvent<HTMLInputElement>，消除 any
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPostContractAddr(e.target.value)}
+                      // 同时修复未转义引号：将双引号改为单引号
+                      placeholder='输入要授权的Post合约地址（0x开头）'
                       className={`w-full p-2 bg-[#1A182E]/80 border rounded-lg text-[#EAE6F2] focus:outline-none focus:ring-2 transition ${
                         authorizeError && authorizeError.includes('地址') 
                           ? 'border-red-500 focus:ring-red-500' 
