@@ -7,8 +7,9 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { readContract } from 'wagmi/actions';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { formatTime, shortenAddress } from '../components/PostCard';
-import { MEMBER_MANAGER_ADDRESS, POST_MANAGER_ADDRESS, LEVEL_NAMES } from '@/app/lib/constants';
-import MemberABI from '@/app/abis/MemberABI.json';
+// 修复1：删除未使用的LEVEL_NAMES导入
+import { MEMBER_MANAGER_ADDRESS, POST_MANAGER_ADDRESS } from '@/app/lib/constants';
+import MemberABI from '@/app/abis/MemberABI.json' assert { type: 'json' };;
 import { selectedChain, config } from '@/app/lib/wagmi-config';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -27,7 +28,6 @@ interface Member {
   joinTime: Date;
   name: string; // 会员名称
 }
-
 
 // 地址验证工具函数
 const isValidAddress = (addr: unknown): addr is WalletAddress => {
@@ -83,31 +83,38 @@ export default function AdminMemberManagementPage() {
     log('客户端初始化完成');
   }, []);
 
-  // 1. 获取管理员地址（仅客户端就绪后启用）
-  const { 
-    data: contractAdmin, 
-    isLoading: isLoadingAdmin,
-    isError: isErrorAdmin,
-    error: adminError,
-    refetch: refetchAdmin
-  } = useReadContract({
-    address: MEMBER_MANAGER_ADDRESS,
-    abi: MemberABI,
-    functionName: 'admin',
-    query: { enabled: isClientReady && isConnected && isCorrectChain }
-  });
+  // 1. 获取管理员地址
+  // 修复2：为 useReadContract 提供完整的泛型参数
+  // <TAbi, TFunctionName, TArgs, TReturn>
+  // 修复：将 `typeof config` 作为第一个泛型参数
+    const { 
+  data: contractAdmin, 
+  isLoading: isLoadingAdmin,
+  isError: isErrorAdmin,
+  error: adminError,
+  refetch: refetchAdmin
+} = useReadContract<typeof MemberABI, 'admin', [], typeof config>({
+  config, // 确保传入 config 对象
+  address: MEMBER_MANAGER_ADDRESS,
+  abi: MemberABI, // 直接使用导入的 ABI
+  functionName: 'admin',
+  query: { enabled: isClientReady && isConnected && isCorrectChain }
+});
 
-  // 2. 查询当前授权的Post合约地址（仅客户端就绪+管理员验证后启用）
+  // 2. 查询当前授权的Post合约地址
+  // 修复3：为 useReadContract 提供完整的泛型参数
   const { 
     data: authorizedAddrData, 
     isLoading: isLoadingAuthorizedAddr,
     refetch: refetchAuthorizedAddr
-  } = useReadContract({
+  } = useReadContract<typeof MemberABI, 'authorizedPostContract', [], typeof config>({
+    config, // 确保传入 config 对象
     address: MEMBER_MANAGER_ADDRESS,
     abi: MemberABI,
     functionName: 'authorizedPostContract',
     query: { enabled: isClientReady && isAdmin === true && isConnected && isCorrectChain }
   });
+
 
   // 同步当前授权地址状态（仅客户端就绪后执行）
   useEffect(() => {
@@ -133,14 +140,16 @@ export default function AdminMemberManagementPage() {
     }
   }, [isClientReady, contractAdmin, isLoadingAdmin, isErrorAdmin, adminError]);
 
-  // 3. 获取所有会员地址（仅客户端就绪+管理员验证后启用）
+  // 3. 获取所有会员地址
+  // 修复4：为 useReadContract 提供完整的泛型参数
   const { 
     data: allMembersData, 
     isLoading: isLoadingAllMembers, 
     isError: isErrorAllMembers,
     error: allMembersError,
     refetch: refetchMemberList
-  } = useReadContract({
+  } = useReadContract<typeof MemberABI, 'getAllMembers', [], typeof config>({
+    config, // 确保传入 config 对象
     address: MEMBER_MANAGER_ADDRESS,
     abi: MemberABI,
     functionName: 'getAllMembers',
@@ -159,7 +168,7 @@ export default function AdminMemberManagementPage() {
     }
   }, [isClientReady, allMembersData, isLoadingAllMembers, isErrorAllMembers, allMembersError, isAdmin]);
 
-  // 4. 批量查询会员详情（仅客户端就绪后启用）
+  // 4. 批量查询会员详情
   const memberQueries = useQueries({
     queries: allMemberAddresses.map((memberAddr) => ({
       queryKey: ['memberInfo', memberAddr],
@@ -293,8 +302,8 @@ export default function AdminMemberManagementPage() {
     }
   }, [isClientReady, isWaitingAuthorizeTx, isAuthorizeSuccess, isAuthorizeTxError, authorizeTxHash, authorizeTxError, refetchAuthorizedAddr, currentAuthorizedAddr]);
 
-  // 缓存动态依赖
-  const memberQueryData = useMemo(() => memberQueries.map(q => q.data), [memberQueries]);
+  // 修复5：删除未使用的memberQueryData变量
+  // 聚合查询就绪状态（基于memberQueries直接判断，无需额外变量）
   const allQueriesReady = useMemo(() => 
     memberQueries.every(q => !q.isLoading && !q.isError && q.data !== undefined), 
   [memberQueries]);
@@ -455,9 +464,7 @@ export default function AdminMemberManagementPage() {
     }
   };
 
-  const handleGoToHome = () => {
-    router.push('/');
-  };
+  // 修复6：删除未使用的handleGoToHome函数
 
   return (
     <div className="min-h-screen bg-[#0F0D1B] text-white">
