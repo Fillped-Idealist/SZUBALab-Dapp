@@ -4,6 +4,8 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useReadContract } from 'wagmi';
+import Link from 'next/link'; // 最小改动1: 导入Next.js的Link组件
+
 // 修复1：导入正确的会员合约ABI（替代ForumABI）
 import MemberABI from '../abis/MemberABI.json';
 // 修复2：替换为实际存在的合约地址（POST_MANAGER_ADDRESS或MEMBER_MANAGER_ADDRESS）
@@ -73,19 +75,21 @@ export default function WalletConnector() {
       {showDropdown && (
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg py-1 z-50">
           {!isRegistered ? ( // 修复4：使用处理后的isRegistered状态
-            <a
+            // 最小改动2: 将 <a> 标签替换为 <Link> 组件
+            <Link
               href="/register"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
               未注册，点击注册
-            </a>
+            </Link>
           ) : (
-            <a
+            // 最小改动3: 将 <a> 标签替换为 <Link> 组件
+            <Link
               href="/profile"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
               个人中心
-            </a>
+            </Link>
           )}
           <button
             onClick={handleDisconnect}
