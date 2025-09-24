@@ -34,7 +34,40 @@ export default function PostDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false); // 删除操作加载中
   const [deleteError, setDeleteError] = useState<string | null>(null); // 删除错误信息
 
-  // 无效ID处理
+  // 核心修复：使用类型绕过+运行时验证（保持原样）
+  const {
+    data: postContractData,
+    isLoading: isLoadingPost,
+    isError: isPostError,
+    error: postError,
+  } = useReadContract({
+    address: POST_MANAGER_ADDRESS,
+    abi: safeAbi, // 使用处理后的ABI
+    functionName: 'getPostById' as const, // 强制指定函数名类型
+    args: [postIdBigInt] as GetPostByIdArgs, // 强制参数类型（用BigInt）
+  });
+
+  // 新增：删除帖子合约调用（保持原样）
+  const { writeContract, data: deleteTxHash, isPending: isDeletePending } = useWriteContract();
+  const {
+    isLoading: isWaitingDeleteTx,
+    isSuccess: isDeleteSuccess,
+    isError: isDeleteTxError,
+    error: deleteTxError
+  } = useWaitForTransactionReceipt({
+    hash: deleteTxHash,
+    query:{ enabled: !!deleteTxHash }
+  });
+
+  const [post, setPost] = useState<Post | null>(null);
+  const [loadError, setLoadError] = useState('');
+  // 判断当前用户是否为帖子作者（保持原样）
+  const isAuthor = post && currentAddress 
+    ? currentAddress.toLowerCase() === post.author.toLowerCase() 
+    : false;
+
+  // ========== 关键改动：将“无效ID处理”移到所有Hook之后 ==========
+  // 无效ID处理（原位置在Hook前，现移到所有Hook声明后）
   if (isNaN(postId) || postId < 1) {
     return (
       <div className="min-h-screen bg-[#0F0D1B] flex items-center justify-center p-4">
@@ -53,39 +86,7 @@ export default function PostDetailPage() {
     );
   }
 
-  // 核心修复：使用类型绕过+运行时验证
-  const {
-    data: postContractData,
-    isLoading: isLoadingPost,
-    isError: isPostError,
-    error: postError,
-  } = useReadContract({
-    address: POST_MANAGER_ADDRESS,
-    abi: safeAbi, // 使用处理后的ABI
-    functionName: 'getPostById' as const, // 强制指定函数名类型
-    args: [postIdBigInt] as GetPostByIdArgs, // 强制参数类型（用BigInt）
-  });
-
-  // 新增：删除帖子合约调用
-  const { writeContract, data: deleteTxHash, isPending: isDeletePending } = useWriteContract();
-  const {
-    isLoading: isWaitingDeleteTx,
-    isSuccess: isDeleteSuccess,
-    isError: isDeleteTxError,
-    error: deleteTxError
-  } = useWaitForTransactionReceipt({
-    hash: deleteTxHash,
-    query:{ enabled: !!deleteTxHash }
-  });
-
-  const [post, setPost] = useState<Post | null>(null);
-  const [loadError, setLoadError] = useState('');
-  // 判断当前用户是否为帖子作者
-  const isAuthor = post && currentAddress 
-    ? currentAddress.toLowerCase() === post.author.toLowerCase() 
-    : false;
-
-  // 运行时验证ABI有效性
+  // 运行时验证ABI有效性（保持原样）
   useEffect(() => {
     if (!Array.isArray(safeAbi)) {
       setLoadError('ABI格式错误：必须是数组类型');
@@ -93,7 +94,7 @@ export default function PostDetailPage() {
     }
   }, []);
 
-  // 解析合约数据
+  // 解析合约数据（保持原样）
   useEffect(() => {
     if (isLoadingPost || isPostError || !postContractData || !Array.isArray(postContractData)) {
       setLoadError(isPostError ? '合约调用失败' : loadError || '');
@@ -121,7 +122,7 @@ export default function PostDetailPage() {
     }
   }, [postContractData, isLoadingPost, isPostError, loadError]);
 
-  // 新增：处理删除确认
+  // 新增：处理删除确认（保持原样）
   const handleDeleteClick = () => {
     if (!isConnected || !currentAddress) {
       alert('请先连接钱包');
@@ -135,13 +136,13 @@ export default function PostDetailPage() {
     setDeleteError(null);
   };
 
-  // 新增：取消删除
+  // 新增：取消删除（保持原样）
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
     setDeleteError(null);
   };
 
-  // 新增：确认删除（调用合约）
+  // 新增：确认删除（调用合约）（保持原样）
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     setDeleteError(null);
@@ -165,7 +166,7 @@ export default function PostDetailPage() {
     }
   };
 
-  // 新增：监听删除交易结果
+  // 新增：监听删除交易结果（保持原样）
   useEffect(() => {
     if (isWaitingDeleteTx) {
       setIsDeleting(true);
@@ -190,7 +191,7 @@ export default function PostDetailPage() {
     }
   }, [isWaitingDeleteTx, isDeleteSuccess, isDeleteTxError, deleteTxHash, deleteTxError, router]);
 
-  // 优化删除成功后的提示（在弹窗关闭后显示临时提示）
+  // 优化删除成功后的提示（在弹窗关闭后显示临时提示）（保持原样）
   useEffect(() => {
     if (isDeleteSuccess) {
       // 显示“删除成功，跳主页”的临时提示
@@ -198,7 +199,7 @@ export default function PostDetailPage() {
     }
   }, [isDeleteSuccess]);
 
-  // 页面渲染
+  // 页面渲染（保持原样）
   return (
     <div className="min-h-screen bg-[#0F0D1B] text-white">
       {/* 顶部导航栏（与CreatePostPage完全一致） */}
