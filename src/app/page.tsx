@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useReadContract, useConfig, useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useReadContract, useConfig, useAccount, useConnect, useDisconnect, type Config } from 'wagmi';
 import { readContract } from '@wagmi/core'; 
 import Link from 'next/link';
 import PostCard from './components/PostCard';
@@ -30,11 +30,11 @@ const formatTime = (timestamp: Date): string => {
     minute: '2-digit',
   });
 };
-const fetchMemberName = async (address: string, config: any) => {
+const fetchMemberName = async (address: string, config: Config) => { // 核心：config: Config 替代 config: any
   try {
     const memberInfo = await readContract(config, {
       address: MEMBER_MANAGER_ADDRESS,
-      abi: MemberABI as readonly unknown[],
+      abi: MemberABI as readonly unknown[], // 保持不变（最小化修改）
       functionName: 'getMemberInfo',
       args: [address as `0x${string}`],
     });
