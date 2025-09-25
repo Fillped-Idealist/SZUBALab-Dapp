@@ -16,6 +16,7 @@ import {
   faExclamationCircle, faSpinner, faArrowLeft, faCopy, faCheck
 } from '@fortawesome/free-solid-svg-icons';
 import AuthGuard from '@/app/components/AuthGuard';
+import type { Hex } from 'viem';
 
 // 类型定义
 type WalletAddress = `0x${string}`;
@@ -29,7 +30,7 @@ interface Member {
 }
 
 // 定义合约错误类型（解决 Unexpected any）
-type ContractError = Error & { code?: string; data?: any };
+type ContractError = Error & { code?: string; data?: Hex };
 
 // 地址验证工具函数
 const isValidAddress = (addr: unknown): addr is WalletAddress => {
