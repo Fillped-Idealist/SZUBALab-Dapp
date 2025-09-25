@@ -569,7 +569,7 @@ export default function AdminMemberManagementPage() {
                   <h3 className="text-sm font-medium text-[#EAE6F2]/60">当前钱包地址</h3>
                   {currentAddress && isValidAddress(currentAddress) && (
                     <button
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         copyToClipboard(currentAddress);
                         setCopyStatus({ id: 'current', text: '已复制!' });
                       }}
@@ -607,7 +607,7 @@ export default function AdminMemberManagementPage() {
                   <h3 className="text-sm font-medium text-[#EAE6F2]/60">合约管理员地址</h3>
                   {isValidAddress(contractAdmin) && (
                     <button
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         copyToClipboard(contractAdmin);
                         setCopyStatus({ id: 'admin', text: '已复制!' });
                       }}
@@ -672,7 +672,7 @@ export default function AdminMemberManagementPage() {
                   )}
                   {currentAuthorizedAddr && (
                     <button
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         copyToClipboard(currentAuthorizedAddr);
                         setCopyStatus({ id: 'authorized', text: '已复制!' });
                       }}
