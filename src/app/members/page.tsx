@@ -448,8 +448,9 @@ export default function AdminMemberManagementPage() {
 
   // 复制状态处理
   useEffect(() => {
-    if (copyStatus) {
-      const timer = setTimeout(() => setCopyStatus(null), 2000);
+  if (copyStatus) {
+      // 核心修复：显式标注 timer 为 NodeJS.Timeout
+      const timer: NodeJS.Timeout = setTimeout(() => setCopyStatus(null), 2000);
       return () => clearTimeout(timer);
     }
   }, [copyStatus]);
@@ -608,8 +609,11 @@ export default function AdminMemberManagementPage() {
                   {isValidAddress(contractAdmin) && (
                     <button
                       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        copyToClipboard(contractAdmin);
-                        setCopyStatus({ id: 'admin', text: '已复制!' });
+                        // 核心修复：先判断 contractAdmin 是 string 类型，再传入 copyToClipboard
+                        if (typeof contractAdmin === 'string') {
+                          copyToClipboard(contractAdmin);
+                          setCopyStatus({ id: 'admin', text: '已复制!' });
+                        }
                       }}
                       className="text-xs text-purple-400 hover:text-white flex items-center gap-1"
                     >
@@ -673,8 +677,11 @@ export default function AdminMemberManagementPage() {
                   {currentAuthorizedAddr && (
                     <button
                       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        copyToClipboard(currentAuthorizedAddr);
-                        setCopyStatus({ id: 'authorized', text: '已复制!' });
+                        // 核心修复：确保 currentAuthorizedAddr 是 string 类型
+                        if (currentAuthorizedAddr) {
+                          copyToClipboard(currentAuthorizedAddr);
+                          setCopyStatus({ id: 'authorized', text: '已复制!' });
+                        }
                       }}
                       className="text-xs text-purple-400 hover:text-white flex items-center gap-1"
                     >
