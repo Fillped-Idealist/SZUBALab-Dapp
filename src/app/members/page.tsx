@@ -23,7 +23,7 @@ interface Member {
   address: WalletAddress;
   isRegistered: boolean;
   postCount: number;
-  level: string; // "1"-"5"
+  level: string; // 1-5
   joinTime: Date;
   name: string; // 会员名称
 }
@@ -174,26 +174,27 @@ export default function AdminMemberManagementPage() {
         log(`开始获取会员 ${shortenAddress(memberAddr)} 详情（含名称字段）`);
 
         try {
-          const res = await readContract(
-            config,
-            {
-              abi: MemberABI,
-              address: MEMBER_MANAGER_ADDRESS,
-              functionName: 'getMemberInfo',
-              args: [memberAddr] as [WalletAddress],
-              chainId: selectedChain.id,
-            }
-          );
+              // 核心修改：为 readContract 返回值显式指定类型为 unknown，避免隐式 any 推断
+              const res: unknown = await readContract(
+                config,
+                {
+                  abi: MemberABI,
+                  address: MEMBER_MANAGER_ADDRESS,
+                  functionName: 'getMemberInfo',
+                  args: [memberAddr] as [WalletAddress],
+                  chainId: selectedChain.id,
+                }
+              );
 
-          if (!Array.isArray(res) || res.length !== 5) {
-            throw new Error(`返回数据格式错误，期望5个值（含name），实际：${JSON.stringify(res)}`);
-          }
+              if (!Array.isArray(res) || res.length !== 5) {
+                throw new Error(`返回数据格式错误，期望5个值（含name），实际：${JSON.stringify(res)}`);
+              }
 
-          const [isRegistered, postCount, level, joinTime, name] = res as [boolean, bigint, string, bigint, string];
-          setDetailLoadingStatus(prev => ({ ...prev, [memberAddr]: 'success' }));
-          log(`成功获取会员 ${shortenAddress(memberAddr)} 详情，名称：${name || '未设置'}`);
-          return [isRegistered, postCount, level, joinTime, name];
-        } 
+              const [isRegistered, postCount, level, joinTime, name] = res as [boolean, bigint, string, bigint, string];
+              setDetailLoadingStatus(prev => ({ ...prev, [memberAddr]: 'success' }));
+              log(`成功获取会员 ${shortenAddress(memberAddr)} 详情，名称：${name || '未设置'}`);
+              return [isRegistered, postCount, level, joinTime, name];
+        }
         catch (err: unknown) { // 改为 unknown，避免 any
           const error = err as ContractError;
           setDetailLoadingStatus(prev => ({ ...prev, [memberAddr]: 'error' }));
@@ -876,7 +877,8 @@ export default function AdminMemberManagementPage() {
                   <button 
                     onClick={() => {
                       Object.entries(detailLoadingStatus)
-                        .filter(([_, status]) => status === 'error') // 此处_未使用，改为[addr, status]
+                        // 核心修改：用「空占位符 ,」替代「_」，明确表示忽略第一个参数
+                        .filter(([, status]) => status === 'error')
                         .forEach(([addr]) => retrySingleMemberDetail(addr as WalletAddress));
                     }}
                     className="px-4 py-2 glass-effect border border-border text-[#EAE6F2] rounded-full hover:bg-white/5 transition text-sm"
@@ -888,7 +890,7 @@ export default function AdminMemberManagementPage() {
             ) : members.length === 0 ? (
               <div className="glass-effect border border-gray-700/30 rounded-xl p-8 mb-8 bg-[#1A182E]/60 text-center">
                 <h3 className="text-lg font-bold text-[#EAE6F2] mb-2">暂无会员数据</h3>
-                <p className="text-[#EAE6F2]/80 mb-6">请点击"添加新会员"按钮，添加首个会员</p>
+                <p className="text-[#EAE6F2]/80 mb-6">请点击添加新会员按钮，添加首个会员</p>
               </div>
             ) : (
               // 会员列表表格
