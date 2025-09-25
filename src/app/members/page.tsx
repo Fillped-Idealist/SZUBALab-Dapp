@@ -90,7 +90,8 @@ export default function AdminMemberManagementPage() {
     data: contractAdmin, 
     isLoading: isLoadingAdmin,
     isError: isErrorAdmin,
-    error: adminError, // 类型：ContractError
+    // 核心修复：将 error 类型从 ContractError 改为 unknown
+    error: adminError, // 类型：unknown（原错误：ContractError）
     refetch: refetchAdmin
   } = useReadContract<typeof MemberABI, 'admin', [], typeof config>({
     config,
@@ -99,11 +100,14 @@ export default function AdminMemberManagementPage() {
     functionName: 'admin',
     query: { enabled: isClientReady && isConnected && isCorrectChain }
   });
+  
 
   // 2. 查询当前授权的Post合约地址（泛型完整）
   const { 
     data: authorizedAddrData, 
     isLoading: isLoadingAuthorizedAddr,
+    isError: isErrorAuthorizedAddr, // 新增：捕获错误状态
+    error: authorizedAddrError, // 新增：error 类型为 unknown
     refetch: refetchAuthorizedAddr
   } = useReadContract<typeof MemberABI, 'authorizedPostContract', [], typeof config>({
     config,
@@ -125,6 +129,13 @@ export default function AdminMemberManagementPage() {
     }
   }, [isClientReady, authorizedAddrData, isLoadingAuthorizedAddr]);
 
+    useEffect(() => {
+    if (!isClientReady || !isAdmin) return;
+    if (isErrorAuthorizedAddr && !isLoadingAuthorizedAddr) {
+      log('获取授权Post合约地址失败', authorizedAddrError as ContractError);
+    }
+  }, [isClientReady, isAdmin, isErrorAuthorizedAddr, isLoadingAuthorizedAddr, authorizedAddrError]);
+
   // 监听管理员地址变化（错误类型明确，解决 any）
   useEffect(() => {
     if (!isClientReady) return;
@@ -143,7 +154,8 @@ export default function AdminMemberManagementPage() {
     data: allMembersData, 
     isLoading: isLoadingAllMembers, 
     isError: isErrorAllMembers,
-    error: allMembersError, // 类型：ContractError
+    // 核心修复：将 error 类型从 ContractError 改为 unknown
+    error: allMembersError, // 类型：unknown（原错误：ContractError）
     refetch: refetchMemberList
   } = useReadContract<typeof MemberABI, 'getAllMembers', [], typeof config>({
     config,
@@ -152,6 +164,7 @@ export default function AdminMemberManagementPage() {
     functionName: 'getAllMembers',
     query: { enabled: isClientReady && isAdmin === true }
   });
+
 
   // 监听会员列表变化（错误类型明确）
   useEffect(() => {
@@ -164,6 +177,7 @@ export default function AdminMemberManagementPage() {
       log('会员列表获取失败', allMembersError as ContractError);
     }
   }, [isClientReady, allMembersData, isLoadingAllMembers, isErrorAllMembers, allMembersError, isAdmin]);
+
 
   // 4. 批量查询会员详情（catch 错误类型改为 unknown，避免 any）
   const memberQueries = useQueries({
